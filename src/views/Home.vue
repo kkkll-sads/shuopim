@@ -1,28 +1,28 @@
 <template>
   <div class="min-h-screen bg-gray-50 pb-20">
     <!-- Hero Section with Search -->
-    <div class="relative h-96 overflow-hidden">
+    <div class="relative h-80 overflow-hidden">
       <img 
-        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-39QvXzEvxZfF6qLNkHwsiuhYsmcH46.png" 
+        src="/3b1cd3c27d4727efd8faa453a55326bc.png" 
         alt="Hero Background" 
-        class="w-full h-full object-cover"
+        class="w-full h-full object-contain object-top bg-gradient-to-b from-green-50 to-teal-50"
       />
       <div class="absolute inset-0 flex flex-col">
-        <div class="w-full max-w-2xl mx-auto px-3 pt-2.5">
+        <div class="w-full max-w-2xl mx-auto px-3 pt-8">
           <!-- Location and Search Bar -->
           <div class="flex items-center gap-2">
             <div class="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 flex items-center gap-1 flex-shrink-0">
-              <MapPin class="w-4 h-4 text-white" />
-              <span class="text-white text-sm">未知</span>
+              <MapPin class="w-5 h-5 text-white" />
+              <span class="text-white text-base">未知</span>
             </div>
             <div class="flex-1 bg-white/95 backdrop-blur-sm rounded-full shadow-md flex items-center overflow-hidden">
               <input 
                 v-model="searchQuery"
                 type="text" 
                 placeholder="请输入商家名称"
-                class="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400 text-sm px-4 py-2.5"
+                class="flex-1 bg-transparent outline-none text-gray-700 placeholder-gray-400 text-base px-4 py-2.5"
               />
-              <button class="bg-gradient-to-r from-red-500 to-red-600 text-white px-5 py-2.5 text-sm font-medium hover:from-red-600 hover:to-red-700 transition-all flex-shrink-0">
+              <button class="bg-gradient-to-r from-red-500 to-red-600 text-white px-5 py-2.5 text-base font-medium hover:from-red-600 hover:to-red-700 transition-all flex-shrink-0 search-btn">
                 搜索
               </button>
             </div>
@@ -32,27 +32,25 @@
     </div>
 
     <!-- Category Icons -->
-    <div class="bg-white mx-3 -mt-24 relative z-10 rounded-2xl shadow-md p-5">
-      <div class="grid grid-cols-5 gap-1">
+    <div class="bg-white mx-3 rounded-2xl shadow-md p-5 category-card">
+      <div class="flex gap-4 overflow-x-auto scrollbar-hide">
         <button 
           v-for="category in categories" 
           :key="category.id"
           @click="handleCategoryClick(category)"
-          class="flex flex-col items-center gap-1.5 group py-2"
+          class="flex flex-col items-center gap-1.5 group py-2 flex-shrink-0"
         >
           <div 
-            class="w-11 h-11 rounded-full flex items-center justify-center transition-all"
-            :class="selectedCategory === category.id ? 'bg-red-50' : 'bg-gray-50 group-hover:bg-red-50'"
+            class="w-12 h-12 flex items-center justify-center transition-all overflow-hidden"
           >
-            <component 
-              :is="category.icon" 
-              :class="selectedCategory === category.id ? 'text-red-500' : 'text-gray-500 group-hover:text-red-500'"
-              class="w-5 h-5 transition-colors"
+            <img 
+              :src="category.image" 
+              :alt="category.name"
+              class="w-10 h-10 object-contain"
             />
           </div>
           <span 
-            class="text-xs transition-colors whitespace-nowrap text-center leading-tight"
-            :class="selectedCategory === category.id ? 'text-gray-900 font-medium' : 'text-gray-600'"
+            class="text-sm text-gray-700 whitespace-nowrap text-center leading-tight font-medium"
           >
             {{ category.name }}
           </span>
@@ -61,12 +59,12 @@
     </div>
 
     <!-- Filter Tabs -->
-    <div class="flex items-center gap-6 px-4 mt-6 mb-4 overflow-x-auto">
+    <div class="flex items-center gap-6 px-4 mt-2 mb-4 overflow-x-auto">
       <button 
         v-for="tab in filterTabs" 
         :key="tab.id"
         @click="selectedTab = tab.id"
-        class="relative pb-2 text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0"
+        class="relative pb-2 text-base font-medium transition-colors whitespace-nowrap flex-shrink-0"
         :class="selectedTab === tab.id ? 'text-gray-900' : 'text-gray-500'"
       >
         {{ tab.name }}
@@ -102,7 +100,7 @@
             <!-- Merchant Info -->
             <div class="flex-1 min-w-0 flex flex-col justify-between">
               <div>
-                <h3 class="text-sm font-semibold text-gray-900 mb-1.5 truncate">
+                <h3 class="text-base font-semibold text-gray-900 mb-1.5 truncate">
                   {{ merchant.name }}
                 </h3>
                 
@@ -140,16 +138,16 @@
 
           <!-- Action Buttons -->
           <div class="grid grid-cols-7 gap-2 mt-3">
-            <button class="col-span-3 flex items-center justify-center gap-1 py-2 px-2 bg-gray-50 text-gray-700 rounded-lg text-xs hover:bg-gray-100 transition-colors whitespace-nowrap">
-              <TrendingUp class="w-3.5 h-3.5 flex-shrink-0 text-red-500" />
+            <button class="col-span-3 flex items-center justify-center gap-1 py-2 px-2 bg-gray-50 text-gray-700 rounded-lg text-sm hover:bg-gray-100 transition-colors whitespace-nowrap">
+              <TrendingUp class="w-4 h-4 flex-shrink-0 text-red-500" />
               <span>{{ merchant.commission }}</span>
             </button>
-            <button class="col-span-2 flex items-center justify-center gap-1 py-2 px-2 bg-gray-50 text-gray-700 rounded-lg text-xs hover:bg-gray-100 transition-colors whitespace-nowrap">
-              <Phone class="w-3.5 h-3.5 text-orange-500" />
+            <button class="col-span-2 flex items-center justify-center gap-1 py-2 px-2 bg-gray-50 text-gray-700 rounded-lg text-sm hover:bg-gray-100 transition-colors whitespace-nowrap">
+              <Phone class="w-4 h-4 text-orange-500" />
               <span>打电话</span>
             </button>
-            <button class="col-span-2 flex items-center justify-center gap-1 py-2 px-2 bg-gray-50 text-gray-700 rounded-lg text-xs hover:bg-gray-100 transition-colors whitespace-nowrap">
-              <Navigation class="w-3.5 h-3.5 text-orange-500" />
+            <button class="col-span-2 flex items-center justify-center gap-1 py-2 px-2 bg-gray-50 text-gray-700 rounded-lg text-sm hover:bg-gray-100 transition-colors whitespace-nowrap">
+              <Navigation class="w-4 h-4 text-orange-500" />
               <span>去这里</span>
             </button>
           </div>
@@ -158,29 +156,17 @@
     </div>
 
     <!-- Bottom Navigation -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-sm">
-      <div class="grid grid-cols-5 h-16">
-        <button 
-          v-for="nav in bottomNav" 
-          :key="nav.id"
-          @click="handleNavClick(nav.id)"
-          class="flex flex-col items-center justify-center gap-0.5 transition-colors"
-          :class="activeNav === nav.id ? 'text-red-500' : 'text-gray-500'"
-        >
-          <component 
-            :is="nav.icon" 
-            class="w-5 h-5"
-          />
-          <span class="text-xs" :class="activeNav === nav.id ? 'font-medium' : ''">{{ nav.name }}</span>
-        </button>
-      </div>
-    </div>
+    <BottomNavigation 
+      :active-nav="activeNav" 
+      @nav-click="handleNavClick"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import BottomNavigation from '@/components/BottomNavigation.vue'
 import { 
   Users, 
   Coffee, 
@@ -192,26 +178,28 @@ import {
   MapPin,
   TrendingUp,
   Phone,
-  Navigation,
-  MapPinned,
-  Video,
-  MessageSquare,
-  User
+  Navigation
 } from 'lucide-vue-next'
 
 const router = useRouter()
 
 const searchQuery = ref('')
-const selectedCategory = ref('all')
-const selectedTab = ref('gifts')
+const selectedCategory = ref(0)
+const selectedTab = ref('all')
 const activeNav = ref('home')
 
 const categories = [
-  { id: 'all', name: '全部', icon: Users },
-  { id: 'food', name: '美食', icon: Coffee },
-  { id: 'entertainment', name: '休闲娱乐', icon: Smartphone },
-  { id: 'beauty', name: '美容美发', icon: Sparkles },
-  { id: 'daily', name: '日用百货', icon: ShoppingBag }
+  { id: 0, name: '全部', icon: Users, image: 'https://file.sdskpm.net/spyg/icon/classfy_all.png' },
+  { id: 1, name: '美食', icon: Coffee, image: 'https://file.sdskpm.net/uploads/20250415/40f0f3c414facbbea23b74c8658af866.png' },
+  { id: 2, name: '休闲娱乐', icon: Smartphone, image: 'https://file.sdskpm.net/uploads/20250415/2984d2ea5625975db7dc808a5b3ba512.png' },
+  { id: 3, name: '美容美发', icon: Sparkles, image: 'https://file.sdskpm.net/uploads/20250415/eda1f47a94b34f03c5b8dd6658069626.png' },
+  { id: 4, name: '日用百货', icon: ShoppingBag, image: 'https://file.sdskpm.net/uploads/20250415/9b6fcca0889b021c091a8f3ba3a26545.png' },
+  { id: 5, name: '健康保健', icon: Users, image: 'https://file.sdskpm.net/uploads/20250415/e5d8edc808d3176880a32622370763ed.png' },
+  { id: 6, name: '汽车服务', icon: Users, image: 'https://file.sdskpm.net/uploads/20250415/8863bc7a0a7dabbdea5d9cf03cc4895c.png' },
+  { id: 7, name: '茶叶茶行', icon: Coffee, image: 'https://file.sdskpm.net/uploads/20250415/0e87d323ae781026f2007f35dab01a5d.png' },
+  { id: 8, name: '超市购物', icon: ShoppingBag, image: 'https://file.sdskpm.net/uploads/20250415/a314a5069104ef48172693380695d502.png' },
+  { id: 9, name: '摄影广告', icon: Sparkles, image: 'https://file.sdskpm.net/uploads/20250415/aa97d72dea7f3eb17a211939af4b79a8.png' },
+  { id: 10, name: '其他', icon: Smartphone, image: 'https://file.sdskpm.net/uploads/20250415/ce3201162784809a357e29223632ee7a.png' }
 ]
 
 const filterTabs = [
@@ -223,44 +211,33 @@ const filterTabs = [
 const merchants = [
   {
     id: 1,
-    name: '琼海博鳌璋晨客栈旅店',
+    name: '贺州市禾云广告策划有限公司',
     image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=400&fit=crop',
     rating: 5.0,
-    location: '海南省琼海市博鳌镇玉带湾路...',
-    distance: '908.37km',
+    location: '广西壮族自治区贺州市八步区...',
+    distance: '7.27km',
     commission: '数据价值分配6%',
     hasGift: true
   },
   {
     id: 2,
-    name: '海口龙华区卡野拉小百货店',
+    name: '敏新电子商务中心',
     image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&h=400&fit=crop',
     rating: 5.0,
-    location: '海南省海口市龙华区',
-    distance: '918.52km',
+    location: '广西壮族自治区贺州市平桂区...',
+    distance: '9.55km',
     commission: '数据价值分配6%',
     hasGift: false
   }
 ]
 
-const bottomNav = [
-  { id: 'home', name: '生活圈', icon: MapPinned },
-  { id: 'shop', name: '选品广场', icon: ShoppingBag },
-  { id: 'live', name: '直播', icon: Video },
-  { id: 'message', name: '消息', icon: MessageSquare },
-  { id: 'profile', name: '我的', icon: User }
-]
 
 const handleCategoryClick = (category) => {
-  if (category.id === 'all') {
-    selectedCategory.value = category.id
-  } else {
-    // 跳转到分类页面
-    router.push({
-      path: '/category',
-      query: { type: category.id, name: category.name }
-    })
-  }
+  // 无论点击哪个分类，都跳转到分类页面
+  router.push({
+    path: '/category',
+    query: { type: category.id, name: category.name }
+  })
 }
 
 const handleNavClick = (navId) => {
@@ -287,3 +264,29 @@ const handleNavClick = (navId) => {
   }
 }
 </script>
+
+<style scoped>
+.category-card {
+  margin-top: -4rem;
+  position: relative;
+  z-index: 10;
+}
+
+.search-btn {
+  margin-left: -1rem;
+  transform: translateX(-0.5rem);
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.gap-4 {
+  gap: 0.5rem;
+}
+</style>

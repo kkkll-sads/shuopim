@@ -33,42 +33,42 @@
     </div>
 
     <!-- Balance Cards -->
-    <div class="balance-container">
-      <div class="grid grid-cols-3 gap-0">
-        <!-- Tree Beans -->
-        <div class="text-white px-3">
-          <div class="flex items-center gap-0.5 mb-8 whitespace-nowrap text-xs">
-            <span class="font-medium">树豆</span>
-            <button @click="viewDetail('beans')" class="opacity-80 flex items-center">
+    <div class="balance-cards-container px-1 py-4">
+      <div class="grid grid-cols-3 gap-1">
+        <!-- Tree Beans Card -->
+        <div class="balance-card balance-card-beans">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-medium whitespace-nowrap">树豆</span>
+            <button @click="viewDetail('beans')" class="text-xs opacity-80 flex items-center gap-0.5 whitespace-nowrap">
               <span>查看明细</span>
-              <ChevronRight class="w-3 h-3" />
+              <ChevronRight class="w-2.5 h-2.5" />
             </button>
           </div>
-          <div class="balance-number">{{ balances.beans }}</div>
+          <div class="text-2xl font-bold">{{ balances.beans }}</div>
         </div>
 
-        <!-- Vouchers -->
-        <div class="text-white border-l border-white/30 px-3">
-          <div class="flex items-center gap-0.5 mb-8 whitespace-nowrap text-xs">
-            <span class="font-medium">消费券</span>
-            <button @click="viewDetail('vouchers')" class="opacity-80 flex items-center">
+        <!-- Vouchers Card -->
+        <div class="balance-card balance-card-vouchers">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-medium whitespace-nowrap">消费券</span>
+            <button @click="viewDetail('vouchers')" class="text-xs opacity-80 flex items-center gap-0.5 whitespace-nowrap">
               <span>查看明细</span>
-              <ChevronRight class="w-3 h-3" />
+              <ChevronRight class="w-2.5 h-2.5" />
             </button>
           </div>
-          <div class="balance-number">{{ balances.vouchers }}</div>
+          <div class="text-2xl font-bold">{{ balances.vouchers }}</div>
         </div>
 
-        <!-- Tree Rights -->
-        <div class="text-white border-l border-white/30 px-3">
-          <div class="flex items-center gap-0.5 mb-8 whitespace-nowrap text-xs">
-            <span class="font-medium">树权</span>
-            <button @click="viewDetail('rights')" class="opacity-80 flex items-center">
+        <!-- Tree Rights Card -->
+        <div class="balance-card balance-card-rights">
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-medium whitespace-nowrap">树权</span>
+            <button @click="viewDetail('rights')" class="text-xs opacity-80 flex items-center gap-0.5 whitespace-nowrap">
               <span>查看明细</span>
-              <ChevronRight class="w-3 h-3" />
+              <ChevronRight class="w-2.5 h-2.5" />
             </button>
           </div>
-          <div class="balance-number">{{ balances.rights }}</div>
+          <div class="text-2xl font-bold">{{ balances.rights }}</div>
         </div>
       </div>
     </div>
@@ -132,20 +132,10 @@
     </div>
 
     <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-sm">
-      <div class="grid grid-cols-5 h-16">
-        <button 
-          v-for="tab in navTabs" 
-          :key="tab.label"
-          @click="handleTabClick(tab.id)"
-          class="flex flex-col items-center justify-center gap-0.5 transition-colors"
-          :class="activeTab === tab.id ? 'text-red-500' : 'text-gray-500'"
-        >
-          <component :is="tab.icon" class="w-5 h-5" :stroke-width="1.5" />
-          <span class="text-xs" :class="activeTab === tab.id ? 'font-medium' : ''">{{ tab.label }}</span>
-        </button>
-      </div>
-    </nav>
+    <BottomNavigation 
+      :active-nav="activeTab" 
+      @nav-click="handleTabClick"
+    />
   </div>
 </template>
 
@@ -153,6 +143,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
+import BottomNavigation from '@/components/BottomNavigation.vue'
 import { 
   Settings, 
   Crown, 
@@ -169,11 +160,6 @@ import {
   UserCheck,
   ThumbsUp,
   MapPin,
-  MapPinned,
-  ShoppingBag,
-  Play,
-  MessageCircle,
-  User,
   Shield
 } from 'lucide-vue-next'
 
@@ -241,14 +227,6 @@ const menuItems = [
 
 const menuItemKeys = ['assets', 'offline', 'card', 'coupons', 'selector', 'merchant', 'recommend', 'address']
 
-// 底部导航
-const navTabs = [
-  { id: 'home', icon: MapPinned, label: '生活圈' },
-  { id: 'shop', icon: ShoppingBag, label: '选品广场' },
-  { id: 'live', icon: Play, label: '直播' },
-  { id: 'message', icon: MessageCircle, label: '消息' },
-  { id: 'profile', icon: User, label: '我的' }
-]
 
 // 处理退出登录
 const handleLogout = () => {
@@ -321,22 +299,42 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.balance-container {
-    margin: 1rem;
-    margin-top: 1rem;
-    background: linear-gradient(to right, rgb(251, 146, 60), rgb(249, 115, 22), rgb(239, 68, 68));
-    border-radius: 1rem;
-    padding-left: 1rem;
-    padding-right: 0.5rem;
-    padding-top: 1.5rem;
-    padding-bottom: 0.5rem;
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 7rem;
 }
 
-.balance-number {
-  font-size: 1.475rem;
-  line-height: 8.25rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: white;
+.px-1 {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+.balance-cards-container {
+  background: linear-gradient(135deg, #fb923c, #f97316, #ef4444, #dc2626);
+  border-radius: 1rem;
+  margin: 0 1rem;
+}
+
+.balance-card {
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+  min-height: 138px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 1 0px 8px rgba(0, 0, 0, 0.1);
+}
+
+.balance-card-beans {
+  background: linear-gradient(135deg, #fb923c, #f97316);
+}
+
+.balance-card-vouchers {
+  background: linear-gradient(135deg, #f97316, #ef4444);
+}
+
+.balance-card-rights {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 </style>

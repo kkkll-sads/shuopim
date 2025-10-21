@@ -94,29 +94,17 @@
     </div>
 
     <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-sm">
-      <div class="grid grid-cols-5 h-16">
-        <button 
-          v-for="nav in bottomNav" 
-          :key="nav.id"
-          @click="handleNavClick(nav.id)"
-          class="flex flex-col items-center justify-center gap-0.5 transition-colors"
-          :class="activeTab === nav.id ? 'text-red-500' : 'text-gray-500'"
-        >
-          <component 
-            :is="nav.icon" 
-            class="w-5 h-5"
-          />
-          <span class="text-xs" :class="activeTab === nav.id ? 'font-medium' : ''">{{ nav.name }}</span>
-        </button>
-      </div>
-    </nav>
+    <BottomNavigation 
+      :active-nav="activeTab" 
+      @nav-click="handleNavClick"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import BottomNavigation from '@/components/BottomNavigation.vue'
 import { 
   Store, 
   User, 
@@ -126,11 +114,7 @@ import {
   MessageSquarePlus, 
   Flower2, 
   BellOff,
-  MessageSquare,
-  MapPinned,
-  ShoppingBag,
-  Video,
-  User as UserIcon
+  MessageSquare
 } from 'lucide-vue-next'
 
 interface ChatItem {
@@ -172,13 +156,6 @@ const chatList = ref<ChatItem[]>([
   // }
 ])
 
-const bottomNav = [
-  { id: 'home', name: '生活圈', icon: MapPinned },
-  { id: 'shop', name: '选品广场', icon: ShoppingBag },
-  { id: 'live', name: '直播', icon: Video },
-  { id: 'message', name: '消息', icon: MessageSquare },
-  { id: 'profile', name: '我的', icon: UserIcon }
-]
 
 const handleStore = () => {
   console.log('打开商家')
