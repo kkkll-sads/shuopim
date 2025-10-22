@@ -37,28 +37,30 @@
 
         <!-- Phone Input -->
         <div class="mb-6">
-          <div class="flex items-center gap-3 border-b border-gray-300 pb-3">
-            <Smartphone class="w-5 h-5 text-gray-600" />
-            <input
-              v-model="phone"
-              type="tel"
-              placeholder="请输入手机号"
-              class="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-400"
-            />
-          </div>
+          <FormInput
+            v-model="phone"
+            type="tel"
+            placeholder="请输入手机号"
+            :prefix-icon="Smartphone"
+            :error="errors.phone"
+            :error-message="errorMessages.phone"
+            container-class="mb-0"
+            input-class="bg-transparent border-0 border-b border-gray-300 rounded-none px-0 py-3 focus:border-gray-800 focus:ring-0"
+          />
         </div>
 
         <!-- Password/Code Input -->
         <div class="mb-6">
-          <div class="flex items-center gap-3 border-b border-gray-300 pb-3">
-            <Lock class="w-5 h-5 text-gray-600" />
-            <input
-              v-model="password"
-              :type="activeTab === 'password' ? 'password' : 'text'"
-              :placeholder="activeTab === 'password' ? '请输入密码' : '请输入验证码'"
-              class="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-400"
-            />
-          </div>
+          <FormInput
+            v-model="password"
+            :type="activeTab === 'password' ? 'password' : 'text'"
+            :placeholder="activeTab === 'password' ? '请输入密码' : '请输入验证码'"
+            :prefix-icon="Lock"
+            :error="errors.password"
+            :error-message="errorMessages.password"
+            container-class="mb-0"
+            input-class="bg-transparent border-0 border-b border-gray-300 rounded-none px-0 py-3 focus:border-gray-800 focus:ring-0"
+          />
         </div>
 
         <!-- Links -->
@@ -105,10 +107,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { Smartphone, Lock } from 'lucide-vue-next'
 import { useUserStore } from '@/store/user'
+import FormInput from '@/components/common/FormInput.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -119,13 +122,65 @@ const password = ref('')
 const agreed = ref(false)
 const loading = ref(false)
 
+// 表单验证状态
+const errors = reactive({
+  phone: false,
+  password: false
+})
+
+// 错误消息
+const errorMessages = reactive({
+  phone: '',
+  password: ''
+})
+
+// 验证规则
+const validateForm = () => {
+  let isValid = true
+  
+  // 重置错误状态
+  Object.keys(errors).forEach(key => {
+    errors[key] = false
+    errorMessages[key] = ''
+  })
+  
+  // 验证手机号
+  const phoneRegex = /^1[3-9]\d{9}$/
+  if (!phone.value.trim()) {
+    errors.phone = true
+    errorMessages.phone = '请输入手机号'
+    isValid = false
+  } else if (!phoneRegex.test(phone.value)) {
+    errors.phone = true
+    errorMessages.phone = '请输入正确的手机号'
+    isValid = false
+  }
+  
+  // 验证密码/验证码
+  if (!password.value.trim()) {
+    errors.password = true
+    errorMessages.password = activeTab.value === 'password' ? '请输入密码' : '请输入验证码'
+    isValid = false
+  } else if (activeTab.value === 'password' && password.value.length < 6) {
+    errors.password = true
+    errorMessages.password = '密码至少6位'
+    isValid = false
+  } else if (activeTab.value === 'code' && password.value.length !== 6) {
+    errors.password = true
+    errorMessages.password = '验证码为6位数字'
+    isValid = false
+  }
+  
+  return isValid
+}
+
 const handleLogin = async () => {
   if (!agreed.value) {
     alert('请先同意服务协议')
     return
   }
-  if (!phone.value || !password.value) {
-    alert('请填写完整信息')
+  
+  if (!validateForm()) {
     return
   }
   

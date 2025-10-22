@@ -7,8 +7,28 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    Avatar: typeof import('./src/components/im/Avatar.vue')['default']
+    BalanceCard: typeof import('./src/components/profile/BalanceCard.vue')['default']
     BottomNavigation: typeof import('./src/components/BottomNavigation.vue')['default']
+    Card: typeof import('./src/components/common/Card.vue')['default']
+    ChatItem: typeof import('./src/components/im/ChatItem.vue')['default']
+    EmptyState: typeof import('./src/components/im/EmptyState.vue')['default']
+    FormButton: typeof import('./src/components/common/FormButton.vue')['default']
+    FormCheckbox: typeof import('./src/components/common/FormCheckbox.vue')['default']
+    FormInput: typeof import('./src/components/common/FormInput.vue')['default']
+    FormRadio: typeof import('./src/components/common/FormRadio.vue')['default']
+    FormSelect: typeof import('./src/components/common/FormSelect.vue')['default']
+    GroupCard: typeof import('./src/components/im/GroupCard.vue')['default']
+    InfoItem: typeof import('./src/components/profile/InfoItem.vue')['default']
+    MenuItem: typeof import('./src/components/profile/MenuItem.vue')['default']
+    PageHeader: typeof import('./src/components/common/PageHeader.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SearchBar: typeof import('./src/components/im/SearchBar.vue')['default']
+    StatCard: typeof import('./src/components/profile/StatCard.vue')['default']
+    TransactionItem: typeof import('./src/components/profile/TransactionItem.vue')['default']
+    UserCard: typeof import('./src/components/im/UserCard.vue')['default']
+    VanEmpty: typeof import('vant/es')['Empty']
+    VanNavBar: typeof import('vant/es')['NavBar']
   }
 }

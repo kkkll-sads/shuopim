@@ -238,26 +238,54 @@ const handleLogout = () => {
 
 // 查看余额明细
 const viewDetail = (type: string) => {
-  console.log('查看明细:', type)
-  // TODO: 跳转到明细页面
+  router.push(`/balance/${type}`)
 }
 
 // 查看全部订单
 const handleAllOrders = () => {
-  console.log('查看全部订单')
-  // TODO: 跳转到订单列表页面
+  router.push('/orders')
 }
 
 // 处理订单状态点击
 const handleOrderStatus = (status: string) => {
-  console.log('查看订单状态:', status)
-  // TODO: 跳转到对应状态的订单列表
+  router.push({
+    path: '/orders',
+    query: { status }
+  })
 }
 
 // 处理菜单点击
 const handleMenuClick = (menu: string) => {
-  console.log('菜单点击:', menu)
-  // TODO: 跳转到对应功能页面
+  switch (menu) {
+    case 'assets':
+      router.push('/my-assets')
+      break
+    case 'offline':
+      router.push('/offline-orders')
+      break
+    case 'card':
+      router.push('/bank-cards')
+      break
+    case 'coupons':
+      router.push('/coupons')
+      break
+    case 'selector':
+      console.log('选品员')
+      // TODO: 跳转到选品员页面
+      break
+    case 'merchant':
+      console.log('商家入驻')
+      // TODO: 跳转到商家入驻页面
+      break
+    case 'recommend':
+      router.push('/my-recommendations')
+      break
+    case 'address':
+      router.push('/address-list')
+      break
+    default:
+      console.log('未知菜单:', menu)
+  }
 }
 
 // 处理设置点击
@@ -310,7 +338,7 @@ onMounted(() => {
 }
 
 .balance-cards-container {
-  background: linear-gradient(135deg, #fb923c, #f97316, #ef4444, #dc2626);
+  background: linear-gradient(135deg, #ffaa65, #f16300, #f3a7a7, #e05959);
   border-radius: 1rem;
   margin: 0 1rem;
 }

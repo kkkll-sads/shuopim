@@ -11,7 +11,7 @@
         <button @click="handleContacts" class="p-2 active:opacity-60 transition-opacity">
           <User :size="22" class="text-gray-700" stroke-width="1.5" />
         </button>
-        <button @click="showMenu = !showMenu" class="p-2 active:opacity-60 transition-opacity">
+        <button @click.stop="showMenu = !showMenu" class="p-2 active:opacity-60 transition-opacity">
           <Plus :size="22" class="text-gray-700" stroke-width="1.5" />
         </button>
         
@@ -24,7 +24,7 @@
           leave-from-class="transform opacity-100 scale-100"
           leave-to-class="transform opacity-0 scale-95"
         >
-          <div v-if="showMenu" class="absolute top-12 right-0 bg-gray-800 text-white rounded-lg shadow-xl py-1 w-44 z-50">
+          <div v-if="showMenu" @click.stop class="absolute top-12 right-0 bg-gray-800 text-white rounded-lg shadow-xl py-1 w-44 z-50">
             <button @click="handleAddFriend" class="w-full px-4 py-3 hover:bg-gray-700 flex items-center gap-3 text-left text-sm transition-colors">
               <UserPlus :size="20" />
               <span>加好友</span>
@@ -163,26 +163,22 @@ const handleStore = () => {
 }
 
 const handleContacts = () => {
-  console.log('打开通讯录')
-  // TODO: 跳转到通讯录页面
+  router.push('/im/contacts')
 }
 
 const handleAddFriend = () => {
-  console.log('加好友')
   showMenu.value = false
-  // TODO: 跳转到添加好友页面
+  router.push('/im/add-friend')
 }
 
 const handleJoinGroup = () => {
-  console.log('加群')
   showMenu.value = false
-  // TODO: 跳转到加群页面
+  router.push('/im/groups/search')
 }
 
 const handleCreateGroup = () => {
-  console.log('创建群聊')
   showMenu.value = false
-  // TODO: 跳转到创建群聊页面
+  router.push('/im/select-members')
 }
 
 const openChat = (chat: ChatItem) => {
