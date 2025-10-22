@@ -4,4 +4,8 @@ export { default as ChatItem } from './ChatItem.vue'
 export { default as SearchBar } from './SearchBar.vue'
 export { default as EmptyState } from './EmptyState.vue'
 export { default as Avatar } from './Avatar.vue'
+export { default as ContactSearch } from './ContactSearch.vue'
+export { default as ContactDetail } from './ContactDetail.vue'
+export { default as FriendApplyList } from './FriendApplyList.vue'
+export { default as FriendApplyForm } from './FriendApplyForm.vue'
 

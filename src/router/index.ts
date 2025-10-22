@@ -74,6 +74,24 @@ const router = createRouter({
       }
     },
     {
+      path: '/im/chat/:id',
+      name: 'Chat',
+      component: () => import('@/views/im/chat.vue'),
+      meta: {
+        title: '聊天',
+        requiresAuth: true
+      }
+    },
+    {
+      path: '/im/friend/:id',
+      name: 'FriendDetail',
+      component: () => import('@/views/im/friend-detail.vue'),
+      meta: {
+        title: '联系人详情',
+        requiresAuth: true
+      }
+    },
+    {
       path: '/im/verification',
       name: 'Verification',
       component: () => import('@/views/im/verification.vue'),
@@ -251,6 +269,12 @@ const router = createRouter({
 router.beforeEach((to, _from, next) => {
   const token = localStorage.getItem('token')
   
+  // 添加调试信息
+  console.log('路由守卫 - 目标路径:', to.path)
+  console.log('路由守卫 - 需要认证:', to.meta.requiresAuth)
+  console.log('路由守卫 - Token存在:', !!token)
+  console.log('路由守卫 - Token值:', token ? token.substring(0, 20) + '...' : 'null')
+  
   // 设置页面标题
   if (to.meta.title) {
     document.title = `${to.meta.title} - 树拍易购`
@@ -258,10 +282,16 @@ router.beforeEach((to, _from, next) => {
   
   // 检查是否需要认证
   if (to.meta.requiresAuth && !token) {
+    // 需要认证但没有token，跳转到登录页
+    console.log('路由守卫 - 重定向到登录页，原因：需要认证但没有token')
     next('/login')
   } else if (to.path === '/login' && token) {
+    // 已登录用户访问登录页，跳转到首页
+    console.log('路由守卫 - 重定向到首页，原因：已登录用户访问登录页')
     next('/home')
   } else {
+    // 其他情况正常访问（包括注册页面）
+    console.log('路由守卫 - 允许访问:', to.path)
     next()
   }
 })

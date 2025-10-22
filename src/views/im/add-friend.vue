@@ -2,13 +2,45 @@
   <div class="min-h-screen bg-gray-50">
     <!-- Header -->
     <div class="bg-white px-4 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-      <button @click="goBack" class="p-1 hover:bg-gray-100 rounded-full transition-colors">
+      <button 
+        @click="handleGoBack" 
+        class="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+        style="z-index: 1000; position: relative;"
+      >
         <ChevronLeft class="w-6 h-6 text-gray-700" />
       </button>
       <h1 class="text-lg font-medium text-gray-800">添加好友</h1>
-      <button @click="refreshList" class="p-1 hover:bg-gray-100 rounded-full transition-colors">
-        <RotateCw class="w-5 h-5 text-gray-700" />
+      <button @click="handleRefresh" :disabled="loading" class="p-1 hover:bg-gray-100 rounded-full transition-colors">
+        <RotateCw :class="['w-5 h-5 text-gray-700', { 'animate-spin': loading }]" />
       </button>
+    </div>
+
+    <!-- Search Tabs -->
+    <div class="bg-white px-4 py-3">
+      <div class="flex space-x-1 bg-gray-100 rounded-lg p-1">
+        <button
+          @click="searchType = 'name'"
+          :class="[
+            'flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors',
+            searchType === 'name' 
+              ? 'bg-white text-gray-900 shadow-sm' 
+              : 'text-gray-600 hover:text-gray-900'
+          ]"
+        >
+          按昵称搜索
+        </button>
+        <button
+          @click="searchType = 'mobile'"
+          :class="[
+            'flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors',
+            searchType === 'mobile' 
+              ? 'bg-white text-gray-900 shadow-sm' 
+              : 'text-gray-600 hover:text-gray-900'
+          ]"
+        >
+          按手机号搜索
+        </button>
+      </div>
     </div>
 
     <!-- Search Bar -->
@@ -16,26 +48,36 @@
       <div class="flex-1">
         <FormInput
           v-model="searchQuery"
-          type="text"
-          placeholder="搜索"
+          :type="searchType === 'mobile' ? 'tel' : 'text'"
+          :placeholder="searchType === 'mobile' ? '请输入手机号' : '搜索用户姓名或昵称'"
           :prefix-icon="Search"
           container-class="mb-0"
           input-class="bg-gray-100 rounded-lg px-3 py-2 text-sm"
           @keyup.enter="handleSearch"
+          @input="handleSearchInput"
         />
       </div>
       <button
         @click="handleSearch"
-        class="bg-gradient-to-r from-orange-400 to-red-500 text-white px-6 py-2 rounded-lg text-sm font-medium"
+        :disabled="loading"
+        class="bg-gradient-to-r from-orange-400 to-red-500 text-white px-6 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
       >
-        搜索
+        {{ loading ? '搜索中...' : '搜索' }}
       </button>
     </div>
 
-    <!-- User List -->
-    <div v-if="filteredUsers.length > 0" class="p-4 space-y-3">
+    <!-- Loading State -->
+    <div v-if="loading && !searchResults.length" class="flex items-center justify-center py-20">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
+        <p class="text-gray-500">搜索中...</p>
+      </div>
+    </div>
+
+    <!-- Search Results -->
+    <div v-else-if="searchResults.length > 0" class="p-4 space-y-3">
       <div
-        v-for="user in filteredUsers"
+        v-for="user in searchResults"
         :key="user.id"
         class="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all user-item"
       >
@@ -43,7 +85,7 @@
           <!-- Avatar -->
           <div class="relative flex-shrink-0">
             <img
-              :src="user.avatar"
+              :src="user.avatar || '/default-avatar.png'"
               :alt="user.name"
               class="w-14 h-14 rounded-full object-cover ring-2 ring-offset-2 ring-orange-200"
             />
@@ -63,11 +105,13 @@
 
           <!-- Add Friend Button -->
           <button
-            @click="addFriend(user)"
-            :disabled="user.isAdded"
+            @click="handleAddFriend(user)"
+            :disabled="user.isAdded || addingUsers.has(user.id)"
             :class="[
               'px-5 py-2 rounded-full text-sm font-medium transition-all active:scale-95',
               user.isAdded
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : addingUsers.has(user.id)
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : 'bg-gradient-to-r from-orange-400 to-red-500 text-white hover:from-orange-500 hover:to-red-600 shadow-sm'
             ]"
@@ -76,6 +120,10 @@
               <Check class="w-4 h-4" />
               已添加
             </span>
+            <span v-else-if="addingUsers.has(user.id)" class="flex items-center gap-1">
+              <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              添加中
+            </span>
             <span v-else>添加</span>
           </button>
         </div>
@@ -83,7 +131,7 @@
     </div>
 
     <!-- Empty State -->
-    <div v-else class="flex items-center justify-center py-20 empty-state">
+    <div v-else-if="!loading && searchQuery" class="flex items-center justify-center py-20 empty-state">
       <div class="text-center">
         <div class="relative w-32 h-32 mx-auto mb-6">
           <div class="absolute inset-0 flex items-center justify-center">
@@ -99,121 +147,201 @@
         <p class="text-gray-400 text-sm">试试搜索用户名或昵称～</p>
       </div>
     </div>
+
+    <!-- Initial State -->
+    <div v-else class="flex items-center justify-center py-20">
+      <div class="text-center">
+        <div class="w-32 h-32 bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <UserPlus class="w-20 h-20 text-orange-400" />
+        </div>
+        <p class="text-gray-400 text-base mb-2">搜索用户</p>
+        <p class="text-gray-400 text-sm">输入用户名或昵称开始搜索</p>
+      </div>
+    </div>
+
+    <!-- Friend Apply Form -->
+    <div v-if="showApplyForm && selectedUser" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
+      <div class="bg-white w-full max-h-[80vh] overflow-y-auto">
+        <FriendApplyForm
+          :contact-info="selectedUser"
+          @apply-sent="handleApplySent"
+          @cancel="handleApplyCancel"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
-<script setup>
-import { ref, computed } from 'vue'
+<script setup lang="ts">
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ChevronLeft, Search, RotateCw, UserPlus, Check } from 'lucide-vue-next'
+import { 
+  ChevronLeft, 
+  RotateCw, 
+  Search, 
+  UserPlus, 
+  Check 
+} from 'lucide-vue-next'
+import { 
+  useFriendManagement, 
+  useIMNavigation, 
+  useToast
+} from '@/composables'
 import FormInput from '@/components/common/FormInput.vue'
+import FriendApplyForm from '@/components/im/FriendApplyForm.vue'
+
+interface User {
+  id: number
+  name: string
+  nickname: string
+  avatar: string
+  isAdded: boolean
+}
+
+// 使用组合式函数
+const {
+  loading,
+  searchUsers,
+  searchContactByMobile,
+  addFriend
+} = useFriendManagement({
+  enableSearch: true,
+  onFriendAdd: (friend: any) => {
+    console.log('好友添加成功:', friend.name)
+  }
+})
 
 const router = useRouter()
 
-const searchQuery = ref('')
-const users = ref([
-  {
-    id: 1,
-    name: '树拍小树',
-    nickname: '13031643064',
-    avatar: '/placeholder.svg?height=48&width=48',
-    isAdded: false
-  },
-  {
-    id: 2,
-    name: '俺是李😂',
-    nickname: '15000608065',
-    avatar: '/placeholder.svg?height=48&width=48',
-    isAdded: false
-  },
-  {
-    id: 3,
-    name: '技术测试直播间请勿参与',
-    nickname: '202411011234',
-    avatar: '/placeholder.svg?height=48&width=48',
-    isAdded: false
-  },
-  {
-    id: 4,
-    name: '日用百货',
-    nickname: '18242955122',
-    avatar: '/placeholder.svg?height=48&width=48',
-    isAdded: false
-  },
-  {
-    id: 5,
-    name: '伟旭士特产商行',
-    nickname: '13843920798781105',
-    avatar: '/placeholder.svg?height=48&width=48',
-    isAdded: false
-  },
-  {
-    id: 6,
-    name: '768852168',
-    nickname: '768852168',
-    avatar: '/placeholder.svg?height=48&width=48',
-    isAdded: false
-  },
-  {
-    id: 7,
-    name: '铸星龙王',
-    nickname: '18667155303',
-    avatar: '/placeholder.svg?height=48&width=48',
-    isAdded: false
-  },
-  {
-    id: 8,
-    name: '689239109',
-    nickname: '689239109',
-    avatar: '/placeholder.svg?height=48&width=48',
-    isAdded: false
-  }
-])
-
-const filteredUsers = computed(() => {
-  if (!searchQuery.value.trim()) {
-    return users.value
-  }
-  const query = searchQuery.value.toLowerCase()
-  return users.value.filter(
-    user =>
-      user.name.toLowerCase().includes(query) ||
-      user.nickname.toLowerCase().includes(query)
-  )
-})
-
-const goBack = () => {
-  router.back()
+// 自定义返回方法，确保返回到消息页面
+const handleGoBack = () => {
+  // 直接跳转到消息页面
+  router.push('/im')
 }
+const { success: showSuccess, error: showError } = useToast()
 
-const refreshList = async () => {
-  console.log('Refreshing user list')
-  // TODO: 调用后端API刷新用户列表
-  // const response = await fetch('/api/users/search')
-  // users.value = await response.json()
+// 本地状态
+const searchQuery = ref('')
+const searchType = ref<'name' | 'mobile'>('name')
+const searchResults = ref<User[]>([])
+const addingUsers = ref(new Set<number>())
+const showApplyForm = ref(false)
+const selectedUser = ref<User | null>(null)
+
+// 防抖搜索
+let searchTimer: NodeJS.Timeout | null = null
+
+const handleSearchInput = () => {
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+  }
+  
+  searchTimer = setTimeout(() => {
+    if (searchQuery.value.trim()) {
+      handleSearch()
+    } else {
+      searchResults.value = []
+    }
+  }, 300)
 }
 
 const handleSearch = async () => {
-  console.log('Searching for:', searchQuery.value)
-  // TODO: 调用后端API搜索用户
-  // const response = await fetch(`/api/users/search?q=${searchQuery.value}`)
-  // users.value = await response.json()
+  if (!searchQuery.value.trim()) {
+    searchResults.value = []
+    return
+  }
+
+  try {
+    let result
+    
+    if (searchType.value === 'mobile') {
+      // 手机号搜索
+      const mobileRegex = /^1[3-9]\d{9}$/
+      if (!mobileRegex.test(searchQuery.value)) {
+        showError('请输入正确的手机号')
+        return
+      }
+      
+      result = await searchContactByMobile(searchQuery.value)
+      
+      if (result.success && result.data) {
+        // 将单个联系人转换为数组格式
+        searchResults.value = [{
+          id: result.data.id,
+          name: result.data.name,
+          nickname: result.data.nickname,
+          avatar: result.data.avatar,
+          isAdded: result.data.relation === 1
+        }]
+      } else {
+        searchResults.value = []
+        showError(result.error || '未找到该用户')
+      }
+    } else {
+      // 昵称搜索
+      result = await searchUsers(searchQuery.value)
+      if (result.success) {
+        searchResults.value = result.data || []
+      } else {
+        showError(result.error || '搜索失败')
+      }
+    }
+  } catch (error) {
+    showError('搜索失败')
+  }
 }
 
-const addFriend = async (user) => {
-  console.log('Adding friend:', user)
-  // TODO: 调用后端API添加好友
-  // const response = await fetch('/api/friends/add', {
-  //   method: 'POST',
-  //   body: JSON.stringify({ userId: user.id })
-  // })
-  // if (response.ok) {
-  user.isAdded = true
-  // }
+const handleAddFriend = async (user: User) => {
+  if (user.isAdded || addingUsers.value.has(user.id)) return
+
+  // 显示申请表单
+  selectedUser.value = user
+  showApplyForm.value = true
 }
+
+const handleApplySent = (apply: any) => {
+  console.log('申请发送成功，更新用户状态:', apply)
+  showApplyForm.value = false
+  selectedUser.value = null
+  showSuccess('好友申请已发送')
+  
+  // 更新搜索结果中用户的状态
+  const userIndex = searchResults.value.findIndex(user => user.id === apply.userId)
+  console.log('查找用户索引:', userIndex, '用户ID:', apply.userId)
+  console.log('搜索结果:', searchResults.value)
+  
+  if (userIndex > -1) {
+    searchResults.value[userIndex].isAdded = true
+    console.log('用户状态已更新:', searchResults.value[userIndex])
+  } else {
+    console.warn('未找到对应的用户，无法更新状态')
+  }
+}
+
+const handleApplyCancel = () => {
+  showApplyForm.value = false
+  selectedUser.value = null
+}
+
+const handleRefresh = async () => {
+  if (searchQuery.value.trim()) {
+    await handleSearch()
+  }
+}
+
+// 监听搜索查询变化
+watch(searchQuery, (newQuery) => {
+  if (!newQuery.trim()) {
+    searchResults.value = []
+  }
+})
+
+// 初始化
+// 可以在这里添加一些推荐用户或热门用户
 </script>
 
 <style scoped>
+/* 用户卡片动画 */
 .user-item {
   animation: slideIn 0.3s ease-out;
 }
@@ -229,55 +357,50 @@ const addFriend = async (user) => {
   }
 }
 
-.empty-state {
-  animation: fadeIn 0.6s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* 空状态装饰 */
 .decoration {
   position: absolute;
-  font-size: 1.5rem;
-  font-weight: bold;
+  color: #f3f4f6;
+  font-size: 24px;
   animation: float 3s ease-in-out infinite;
 }
 
 .decoration-1 {
-  top: 0.5rem;
-  right: 2rem;
-  color: #fb923c;
+  top: 10px;
+  right: 20px;
   animation-delay: 0s;
 }
 
 .decoration-2 {
-  bottom: 2rem;
-  right: 0.5rem;
-  color: #f97316;
-  animation-delay: 0.5s;
+  bottom: 20px;
+  left: 15px;
+  animation-delay: 1s;
 }
 
 .decoration-3 {
-  bottom: 0.5rem;
-  left: 2rem;
-  color: #d1d5db;
-  animation-delay: 1s;
+  top: 50%;
+  right: 10px;
+  animation-delay: 2s;
 }
 
 @keyframes float {
   0%, 100% {
-    transform: translateY(0);
+    transform: translateY(0px);
   }
   50% {
     transform: translateY(-10px);
   }
+}
+
+/* 搜索按钮悬停效果 */
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 用户卡片悬停效果 */
+.user-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 </style>

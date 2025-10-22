@@ -82,10 +82,10 @@
           <!-- Submit Button -->
           <button
             type="submit"
-            :disabled="loading"
+            :disabled="registering"
             class="w-full bg-gradient-to-r from-pink-500 to-pink-400 text-white text-lg font-medium py-4 rounded-full hover:from-pink-600 hover:to-pink-500 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {{ loading ? '注册中...' : '注册' }}
+            {{ registering ? '注册中...' : '注册' }}
           </button>
 
           <!-- Agreement Checkbox -->
@@ -118,8 +118,10 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { Smartphone, Lock, Shield, Send } from 'lucide-vue-next'
 import FormInput from '@/components/common/FormInput.vue'
+import { useAuth } from '@/composables'
 
 const router = useRouter()
+const { register, registering, registerError } = useAuth()
 
 const phone = ref('')
 const password = ref('')
@@ -128,7 +130,6 @@ const invitationCode = ref('')
 const showPassword = ref(false)
 const agreedToTerms = ref(false)
 const countdown = ref(0)
-const loading = ref(false)
 
 // 表单验证状态
 const errors = reactive({
@@ -229,29 +230,41 @@ const handleSubmit = async () => {
     return
   }
   
-  loading.value = true
-  
   try {
-    // 模拟注册 API 调用
-    // TODO: 替换为实际的 API 调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    console.log('注册成功:', {
-      phone: phone.value,
+    // 准备注册数据
+    const registerData = {
+      username: phone.value, // 使用手机号作为用户名
+      mobile: phone.value,
       password: password.value,
-      verificationCode: verificationCode.value,
-      invitationCode: invitationCode.value
-    })
+      password_confirm: password.value,
+      email: '', // 注册时邮箱可以为空
+      verification_code: verificationCode.value || undefined,
+      invitation_code: invitationCode.value || undefined
+    }
     
-    alert('注册成功！请登录')
+    console.log('准备发送注册请求，数据:', registerData)
+    console.log('API基础URL:', import.meta.env.VITE_API_BASE || 'http://localhost:8000')
+    console.log('完整请求URL:', `${import.meta.env.VITE_API_BASE || 'http://localhost:8000'}/api/v1/auth/register`)
     
-    // 跳转到登录页
-    router.push('/login')
+    // 调用真实的注册API
+    const result = await register(registerData)
+    
+    console.log('注册API响应:', result)
+    
+    if (result.success) {
+      console.log('注册成功，用户信息:', result.data)
+      // 注册成功后会自动跳转到首页（由 useAuth 处理）
+    } else {
+      console.error('注册失败:', result.error)
+    }
   } catch (error) {
-    console.error('注册失败:', error)
-    alert('注册失败，请重试')
-  } finally {
-    loading.value = false
+    console.error('注册失败，详细错误信息:', error)
+    console.error('错误类型:', error.constructor.name)
+    console.error('错误消息:', error.message)
+    console.error('错误响应:', error.response)
+    console.error('错误状态码:', error.response?.status)
+    console.error('错误数据:', error.response?.data)
+    console.error('错误配置:', error.config)
   }
 }
 </script>

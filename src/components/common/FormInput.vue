@@ -145,11 +145,11 @@ const props = defineProps({
     default: ''
   },
   prefixIcon: {
-    type: Object,
+    type: [Object, Function],
     default: null
   },
   suffixIcon: {
-    type: Object,
+    type: [Object, Function],
     default: null
   },
   showClear: {

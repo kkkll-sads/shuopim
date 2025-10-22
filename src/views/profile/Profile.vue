@@ -22,9 +22,10 @@
       <!-- User Info -->
       <div class="flex-1">
         <div class="flex items-center gap-2 mb-1">
-          <span class="text-lg font-medium text-gray-800">{{ maskedPhone }}</span>
+          <span class="text-lg font-medium text-gray-800">{{ displayName }}</span>
           <button @click="handleLogout" class="text-sm text-gray-500">切换账号</button>
         </div>
+        <div v-if="userInfo?.motto" class="text-sm text-gray-600 mb-2">{{ userInfo.motto }}</div>
         <div class="inline-flex items-center gap-1 bg-gradient-to-r from-orange-400 to-red-400 px-2 py-0.5 rounded-full">
           <Crown class="w-3 h-3 text-white" />
           <span class="text-xs text-white">冠购用户</span>
@@ -144,6 +145,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import BottomNavigation from '@/components/BottomNavigation.vue'
+import { getUserProfile } from '@/api/user'
 import { 
   Settings, 
   Crown, 
@@ -170,8 +172,18 @@ const activeTab = ref('profile')
 
 // 用户信息
 const userInfo = computed(() => userStore.userInfo)
+const loading = ref(false)
+
+// 显示名称（优先显示昵称，其次手机号）
+const displayName = computed(() => {
+  if (userInfo.value?.nickname) {
+    return userInfo.value.nickname
+  }
+  return maskedPhone.value
+})
+
 const maskedPhone = computed(() => {
-  const phone = userInfo.value?.phone || '170****2021'
+  const phone = userInfo.value?.mobile || userInfo.value?.phone || '170****2021'
   return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
 })
 
@@ -319,8 +331,31 @@ const handleTabClick = (tabId: string) => {
   }
 }
 
+// 获取用户详细信息
+const fetchUserProfile = async () => {
+  try {
+    loading.value = true
+    const profile = await getUserProfile()
+    
+    // 更新用户信息到 store
+    userStore.setUserInfo({
+      ...userInfo.value,
+      ...profile
+    })
+    
+    console.log('用户信息获取成功:', profile)
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
 // 页面加载时获取数据
 onMounted(() => {
+  // 获取用户详细信息
+  fetchUserProfile()
+  
   // TODO: 获取用户余额
   // TODO: 获取订单数量统计
 })

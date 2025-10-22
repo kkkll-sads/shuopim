@@ -76,10 +76,10 @@
         <!-- Login Button -->
         <button
           @click="handleLogin"
-          :disabled="loading"
+          :disabled="logging"
           class="w-full bg-gradient-to-r from-pink-500 to-pink-400 text-white text-lg font-medium py-4 rounded-full hover:from-pink-600 hover:to-pink-500 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {{ loading ? '登录中...' : '登录' }}
+          {{ logging ? '登录中...' : '登录' }}
         </button>
 
         <!-- Agreement -->
@@ -110,17 +110,17 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { Smartphone, Lock } from 'lucide-vue-next'
-import { useUserStore } from '@/store/user'
 import FormInput from '@/components/common/FormInput.vue'
+import { useAuth } from '@/composables'
+import { tokenManager } from '@/utils/tokenManager'
 
 const router = useRouter()
-const userStore = useUserStore()
+const { login, logging, loginError } = useAuth()
 
 const activeTab = ref('password')
 const phone = ref('')
 const password = ref('')
 const agreed = ref(false)
-const loading = ref(false)
 
 // 表单验证状态
 const errors = reactive({
@@ -184,34 +184,25 @@ const handleLogin = async () => {
     return
   }
   
-  loading.value = true
-  
   try {
-    // 模拟登录 API 调用
-    // TODO: 替换为实际的 API 调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 调用真实的登录API
+    const result = await login({
+      username: phone.value, // 使用手机号作为用户名
+      password: password.value
+    })
     
-    // 模拟登录成功，生成 token
-    const mockToken = `mock_token_${Date.now()}`
-    const mockUserInfo = {
-      phone: phone.value,
-      name: '用户' + phone.value.slice(-4),
-      loginType: activeTab.value
+    if (result.success) {
+      console.log('登录成功，用户信息:', result.data)
+      
+      // 启动 Token 自动刷新
+      tokenManager.startTokenRefresh()
+      
+      // 登录成功后会自动跳转到首页（由 useAuth 处理）
+    } else {
+      console.error('登录失败:', result.error)
     }
-    
-    // 保存 token 和用户信息
-    userStore.setToken(mockToken)
-    userStore.setUserInfo(mockUserInfo)
-    
-    console.log('登录成功:', { phone: phone.value, type: activeTab.value })
-    
-    // 跳转到首页
-    router.push('/home')
   } catch (error) {
     console.error('登录失败:', error)
-    alert('登录失败，请重试')
-  } finally {
-    loading.value = false
   }
 }
 </script>

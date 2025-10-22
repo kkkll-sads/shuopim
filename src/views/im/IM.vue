@@ -42,10 +42,29 @@
       </div>
     </header>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="flex-1 flex items-center justify-center">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+        <p class="text-gray-500">加载中...</p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="flex-1 flex items-center justify-center">
+      <div class="text-center">
+        <div class="text-red-500 mb-2">⚠️</div>
+        <p class="text-gray-500 mb-4">{{ error }}</p>
+        <button @click="handleRefresh" class="bg-blue-500 text-white px-4 py-2 rounded-lg">
+          重试
+        </button>
+      </div>
+    </div>
+
     <!-- Chat List -->
-    <div class="flex-1 bg-white overflow-y-auto pb-16" :class="{'flex items-center justify-center': chatList.length === 0}">
+    <div v-else class="flex-1 bg-white overflow-y-auto pb-16" :class="{'flex items-center justify-center': filteredChatList.length === 0}">
       <div
-        v-for="chat in chatList"
+        v-for="chat in filteredChatList"
         :key="chat.id"
         @click="openChat(chat)"
         class="flex items-center gap-3 px-4 py-4 hover:bg-gray-50 active:bg-gray-100 cursor-pointer border-b border-gray-50 transition-colors"
@@ -75,21 +94,44 @@
 
         <!-- Time & Status -->
         <div class="flex-shrink-0 flex flex-col items-end gap-1">
-          <span class="text-xs text-gray-400">{{ chat.time }}</span>
-          <div v-if="chat.muted" class="text-gray-400">
-            <BellOff :size="16" />
+          <span class="text-xs text-gray-400">{{ formatTime(chat.time) }}</span>
+          <div class="flex items-center gap-1">
+            <button 
+              v-if="chat.muted" 
+              @click.stop="handleMuteToggle(chat)"
+              class="text-gray-400 hover:text-gray-600 transition-colors"
+              title="取消免打扰"
+            >
+              <BellOff :size="16" />
+            </button>
+            <button 
+              v-else
+              @click.stop="handleMuteToggle(chat)"
+              class="text-gray-400 hover:text-gray-600 transition-colors"
+              title="设置免打扰"
+            >
+              <Bell :size="16" />
+            </button>
+            <button 
+              @click.stop="handleDeleteChat(chat)"
+              class="text-gray-400 hover:text-red-500 transition-colors ml-1"
+              title="删除聊天"
+            >
+              <Trash2 :size="16" />
+            </button>
           </div>
         </div>
       </div>
 
       <!-- Empty State -->
-      <div v-if="chatList.length === 0" class="flex flex-col items-center justify-center text-center w-full">
+      <div v-if="filteredChatList.length === 0" class="flex flex-col items-center justify-center text-center w-full">
         <div class="mb-4 relative">
           <div class="w-32 h-32 bg-gray-50 rounded-2xl flex items-center justify-center">
             <MessageSquare :size="56" class="text-gray-300" stroke-width="1.5" />
           </div>
         </div>
         <p class="text-gray-400 text-base">暂无会话</p>
+        <p class="text-gray-400 text-sm mt-1">点击右上角 + 开始聊天</p>
       </div>
     </div>
 
@@ -114,8 +156,17 @@ import {
   MessageSquarePlus, 
   Flower2, 
   BellOff,
+  Bell,
+  Trash2,
   MessageSquare
 } from 'lucide-vue-next'
+import { 
+  useChatList, 
+  useIMNavigation, 
+  useToast,
+  useFormat,
+  useAuth
+} from '@/composables'
 
 interface ChatItem {
   id: number
@@ -126,64 +177,101 @@ interface ChatItem {
   badge: string
   unread: number
   muted: boolean
+  type?: string
 }
 
 const router = useRouter()
 const activeTab = ref('message')
 const showMenu = ref(false)
 
-// 示例数据 - 可以设置为空数组以显示空状态
-const chatList = ref<ChatItem[]>([
-  // {
-  //   id: 1,
-  //   name: '文企通一群',
-  //   avatar: '',
-  //   lastMessage: '[通知消息]',
-  //   time: '昨天',
-  //   badge: '',
-  //   unread: 0,
-  //   muted: false
-  // },
-  // {
-  //   id: 2,
-  //   name: '689556630',
-  //   avatar: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-0do4MHEpvfKutyMVeytROXyrB2YC2A.png',
-  //   lastMessage: '你好',
-  //   time: '13:25',
-  //   badge: '商家',
-  //   unread: 0,
-  //   muted: false
-  // }
-])
+// 认证状态检查
+const { isAuthenticated, user } = useAuth()
 
+// 使用组合式函数
+const {
+  loading,
+  error,
+  filteredChatList,
+  fetchChatList,
+  refreshChatList,
+  markAsRead,
+  toggleMute,
+  deleteChat
+} = useChatList({
+  autoRefresh: true,
+  refreshInterval: 30000,
+  onChatSelect: (chat: any) => {
+    console.log('选择聊天:', chat.name)
+    // TODO: 跳转到聊天详情页面
+  },
+  onChatUpdate: (chats: any) => {
+    console.log('聊天列表更新:', chats.length)
+  }
+})
 
+const {
+  goToContacts,
+  goToAddFriend,
+  goToGroupSearch,
+  goToCreateGroup,
+  goToChat
+} = useIMNavigation()
+
+const { success: showSuccess, error: showError } = useToast()
+const { formatTime } = useFormat()
+
+// 方法
 const handleStore = () => {
   console.log('打开商家')
   // TODO: 跳转到商家页面
 }
 
 const handleContacts = () => {
-  router.push('/im/contacts')
+  goToContacts()
 }
 
 const handleAddFriend = () => {
   showMenu.value = false
-  router.push('/im/add-friend')
+  goToAddFriend()
 }
 
 const handleJoinGroup = () => {
   showMenu.value = false
-  router.push('/im/groups/search')
+  goToGroupSearch()
 }
 
 const handleCreateGroup = () => {
   showMenu.value = false
-  router.push('/im/select-members')
+  goToCreateGroup()
 }
 
 const openChat = (chat: ChatItem) => {
-  console.log('打开聊天:', chat.name)
-  // TODO: 跳转到聊天详情页面
+  // 标记为已读
+  markAsRead(chat.id)
+  // 导航到聊天页面
+  goToChat(chat)
+}
+
+const handleMuteToggle = (chat: ChatItem) => {
+  toggleMute(chat.id)
+  const message = chat.muted ? '已取消免打扰' : '已设置免打扰'
+  showSuccess(message)
+}
+
+const handleDeleteChat = (chat: ChatItem) => {
+  if (confirm(`确定要删除与 ${chat.name} 的聊天吗？`)) {
+    deleteChat(chat.id)
+    showSuccess('聊天已删除')
+  }
+}
+
+const handleRefresh = async () => {
+  try {
+    await refreshChatList()
+    showSuccess('聊天列表已刷新')
+  } catch (error) {
+    showError('刷新失败')
+  }
 }
 
 const handleNavClick = (navId: string) => {
@@ -197,12 +285,11 @@ const handleNavClick = (navId: string) => {
       console.log('选品广场')
       // TODO: 跳转到选品广场
       break
-    case 'live':
-      console.log('直播')
-      // TODO: 跳转到直播页面
-      break
     case 'message':
-      // 已在当前页面
+      // 确保在IM页面，如果不在则跳转
+      if (router.currentRoute.value.path !== '/im') {
+        router.push('/im')
+      }
       break
     case 'profile':
       router.push('/profile')
@@ -210,15 +297,73 @@ const handleNavClick = (navId: string) => {
   }
 }
 
-// 点击外部关闭菜单
-const handleClickOutside = () => {
-  if (showMenu.value) {
-    showMenu.value = false
+// 认证状态调试
+console.log('IM页面 - 认证状态:', isAuthenticated.value)
+console.log('IM页面 - 用户信息:', user.value)
+console.log('IM页面 - localStorage token:', localStorage.getItem('token'))
+console.log('IM页面 - localStorage imToken:', localStorage.getItem('imToken'))
+console.log('IM页面 - localStorage imUserId:', localStorage.getItem('imUserId'))
+
+// 检查认证状态
+if (!isAuthenticated.value) {
+  console.log('IM页面 - 用户未认证，将重定向到登录页')
+  // 显示提示信息
+  alert('请先登录才能访问消息页面')
+}
+
+// 初始化
+fetchChatList()
+</script>
+
+<style scoped>
+/* 自定义样式 */
+.user-item {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-// 监听点击事件
-if (typeof window !== 'undefined') {
-  window.addEventListener('click', handleClickOutside)
+/* 空状态装饰 */
+.decoration {
+  position: absolute;
+  color: #f3f4f6;
+  font-size: 24px;
+  animation: float 3s ease-in-out infinite;
 }
-</script>
+
+.decoration-1 {
+  top: 10px;
+  right: 20px;
+  animation-delay: 0s;
+}
+
+.decoration-2 {
+  bottom: 20px;
+  left: 15px;
+  animation-delay: 1s;
+}
+
+.decoration-3 {
+  top: 50%;
+  right: 10px;
+  animation-delay: 2s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+</style>
