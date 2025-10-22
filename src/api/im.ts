@@ -75,7 +75,7 @@ export const createFriendApply = (data: { user_id?: number; remark?: string }) =
 // 获取好友申请列表
 export const getFriendApplyList = () => {
   return imRequest({
-    url: '/api/v1/contact/apply/list',
+    url: '/api/v1/contact-apply/list',
     method: 'post',
     data: {}
   })
@@ -84,7 +84,7 @@ export const getFriendApplyList = () => {
 // 接受好友申请
 export const acceptFriendApply = (data: { apply_id?: number; remark?: string }) => {
   return imRequest({
-    url: '/api/v1/contact/apply/accept',
+    url: '/api/v1/contact-apply/accept',
     method: 'post',
     data
   })
@@ -93,7 +93,7 @@ export const acceptFriendApply = (data: { apply_id?: number; remark?: string }) 
 // 拒绝好友申请
 export const declineFriendApply = (data: { apply_id?: number; remark?: string }) => {
   return imRequest({
-    url: '/api/v1/contact/apply/decline',
+    url: '/api/v1/contact-apply/decline',
     method: 'post',
     data
   })
@@ -102,7 +102,7 @@ export const declineFriendApply = (data: { apply_id?: number; remark?: string })
 // 获取未读申请数量
 export const getUnreadApplyNum = () => {
   return imRequest({
-    url: '/api/v1/contact/apply/unread-num',
+    url: '/api/v1/contact-apply/unread-num',
     method: 'post',
     data: {}
   })
